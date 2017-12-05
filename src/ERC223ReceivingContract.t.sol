@@ -22,7 +22,7 @@ contract TokenReceivingEchoDemo {
         atn.transfer(_from, _value);
     }
 
-    function anotherTokenFallback(address _from, uint256 _value) public
+    function anotherTokenFallback(address _from, uint256 _value, bytes _data) public
     {
         // check that the msg.sender _token is equal to token address
         require(msg.sender == address(atn));
@@ -69,20 +69,28 @@ contract ERC223ReceivingContractTest is DSTest, TokenController {
     }
 
     function testFail_basic_sanity() {
-        assertTrue(false);
+        atn.mint(this, 10000);
+
+        assertEq(atn.balanceOf(this) , 10000);
+
+        // fail
+        atn.transfer(address(nothing), 100, "0x");
+
+        assertEq(atn.balanceOf(this) , 10000);
+
     }
 
     function test_token_fall_back_with_data() {
         atn.mint(this, 10000);
         atn.transfer(address(echo), 5000, "");
 
-        assertTrue(atn.balanceOf(this) == 10000);
+        assertEq(atn.balanceOf(this) , 10000);
 
         // https://github.com/dapphub/dapp/issues/65
         // need manual testing
-        atn.transfer(address(echo), 5000, "", "anotherTokenFallback(address,uint256)");
+        atn.transfer(address(echo), 5000, "0x", "anotherTokenFallback(address,uint256,bytes)");
 
-        assertTrue(atn.balanceOf(this) == 10000);
+        assertEq(atn.balanceOf(this) , 10000);
 
         atn.transfer(address(nothing), 100);
     }
